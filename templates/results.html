@@ -5,17 +5,20 @@
   <title>Results</title>
 </head>
 <body>
-{% for table in [trucks_results, sports_results] %}
+{% for name, table in [('Trucks', trucks_results), ('Sport cars', sports_results)] %}
+<h3>{{ name }}</h3>
 <table style="width:100%">
   <tr>
     <th>Link</th>
     <th>Title</th>
+    <th>Overview</th>
     <th>Summary</th>
   </tr>
   {% for key, value in table.items()%}
     <tr>
       <td><a href="{{ key }}">{{ key }}</a></td>
       <td>{{ value['title'] }}</td>
+      <td>{{ value['overview'] }}</td>
       <td>{{ value['summary'] }}</td>
     </tr>
   {% endfor %}

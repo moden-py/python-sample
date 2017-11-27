@@ -64,6 +64,9 @@ def car_worker(queue):
 
             car_data['summary'][key] = values
 
+        overview = soup.find("article", {"id": "ra-body"}).find("p")
+        car_data['overview'] = overview.text.strip()
+
         # API call to
         # http://api.edmunds.com/api/vehicle/v2/styles/401693759?view=full&fmt=json&api_key=b72ndgbvxw4vp92eugantyr4
 
