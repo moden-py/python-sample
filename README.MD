@@ -32,7 +32,7 @@ For python 3, I would advise `asyncio` + `aiohttp` in conjunction with `lxml`.
 
 
 # Build Docker image
-`docker build -t car_scraper`
+`docker build -t car_scraper .`
 
 # Run image
-`docker run -ti -d car_scraper`
+`docker run -p 8000:8000 -ti -d car_scraper`
