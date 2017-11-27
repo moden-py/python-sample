@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Results</title>
+</head>
+<body>
+{% for table in [trucks_results, sports_results] %}
+<table style="width:100%">
+  <tr>
+    <th>Link</th>
+    <th>Title</th>
+    <th>Summary</th>
+  </tr>
+  {% for key, value in table.items()%}
+    <tr>
+      <td><a href="{{ key }}">{{ key }}</a></td>
+      <td>{{ value['title'] }}</td>
+      <td>{{ value['summary'] }}</td>
+    </tr>
+  {% endfor %}
+</table>
+<br>
+{% endfor %}
+</body>
+</html>

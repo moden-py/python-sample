@@ -8,8 +8,8 @@ import threading
 from utils import Storage
 
 
-PAGE1 = 'http://www.nydailynews.com/autos/types/truck'
-# PAGE2 = 'http://www.nydailynews.com/autos/types/sports-car'
+PAGE_TRUCKS = 'http://www.nydailynews.com/autos/types/truck'
+PAGE_SPORTS = 'http://www.nydailynews.com/autos/types/sports-car'
 
 # Most popular user agent
 HEADERS = {'user-agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) '
@@ -18,9 +18,9 @@ HEADERS = {'user-agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) '
 WORKERS_NUMBER = 3
 
 
-def get_car_links():
+def get_car_links(page):
     """Find all the car links."""
-    r = requests.get(PAGE1, headers=HEADERS)
+    r = requests.get(page, headers=HEADERS)
     html_doc = r.content
 
     soup = BeautifulSoup(html_doc, 'html.parser')
@@ -36,17 +36,21 @@ def get_car_links():
 
 def car_worker(queue):
     """Parse a car link for details."""
-    storage = Storage('cars')
+    storage = Storage()
 
     while True:
-        car_link = queue.get()
-        if car_link is None:
+        job = queue.get()
+        if job is None:
             break
 
+        job_name, car_link = job
         car_data = {}
 
-        r = requests.get(car_link, headers=HEADERS)
-        html_car = r.content
+        session = requests.Session()
+        session.headers.update(HEADERS)
+
+        page_response = session.get(car_link)
+        html_car = page_response.content
         soup = BeautifulSoup(html_car, 'html.parser')
 
         title = soup.find("h1", {"id": "ra-headline"}).text
@@ -60,14 +64,20 @@ def car_worker(queue):
 
             car_data['summary'][key] = values
 
-        storage.update({car_link: car_data})
+        # API call to
+        # http://api.edmunds.com/api/vehicle/v2/styles/401693759?view=full&fmt=json&api_key=b72ndgbvxw4vp92eugantyr4
+
+        storage[job_name].update({car_link: car_data})
         queue.task_done()
+        session.close()
+        print('Successfully parsed {}'.format(car_link))
 
 
 def main():
     """Parse http://www.nydailynews.com/autos/types/truck."""
-    car_links = get_car_links()
-    storage = Storage('cars')
+    storage = Storage()
+    storage['trucks'] = {}
+    storage['sports'] = {}
 
     links_queue = queue.Queue()
     threads = []
@@ -76,8 +86,13 @@ def main():
         t.start()
         threads.append(t)
 
-    for item in car_links:
-        links_queue.put(item)
+    truck_links = get_car_links(PAGE_TRUCKS)
+    for item in truck_links:
+        links_queue.put(('trucks', item))
+
+    sport_links = get_car_links(PAGE_SPORTS)
+    for item in sport_links:
+        links_queue.put(('sports', item))
 
     # block until all tasks are done
     links_queue.join()
@@ -89,6 +104,7 @@ def main():
         t.join()
 
     storage.dump()
+    print('Done.')
 
 
 if __name__ == "__main__":
